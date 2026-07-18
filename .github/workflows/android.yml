@@ -55,11 +55,70 @@ jobs:
         rm -rf app/src/main/assets/www
         if [ -d "dist/app/browser" ]; then
           cp -r dist/app/browser app/src/main/assets/www
-        elif [ -d "dist/app" ]; then
+         elif [ -d "dist/app" ]; then
           cp -r dist/app app/src/main/assets/www
-        elif [ -d "dist" ]; then
+         elif [ -d "dist" ]; then
           cp -r dist app/src/main/assets/www
+         fi
+
+    - name: Download Logo and Generate Android Launcher Icons
+      run: |
+        # Download source logo
+        curl -L "https://i.ibb.co.com/yc7GkSWY/file-000000004f7c8209888d5603f5e89d18-removebg-preview.png" -o /tmp/logo.png
+        
+        LOGO="/tmp/logo.png"
+        if [ ! -f "$LOGO" ]; then
+            echo "Error: Logo download failed!"
+            exit 1
         fi
+
+        echo "Generating Android Launcher Icons from downloaded logo..."
+
+        # Densities and sizes
+        # format: density_name|canvas_legacy|logo_legacy|canvas_adaptive|logo_adaptive|circle_margin
+        DENSITIES=(
+            "mdpi|48|32|108|64|1"
+            "hdpi|72|48|162|96|2"
+            "xhdpi|96|64|216|128|2"
+            "xxhdpi|144|96|324|192|3"
+            "xxxhdpi|192|128|432|256|4"
+        )
+
+        for item in "${DENSITIES[@]}"; do
+            IFS='|' read -r -a arr <<< "$item"
+            DENSITY="${arr[0]}"
+            CANVAS_LEG="${arr[1]}"
+            LOGO_LEG="${arr[2]}"
+            CANVAS_ADA="${arr[3]}"
+            LOGO_ADA="${arr[4]}"
+            MARGIN="${arr[5]}"
+
+            DIR="app/src/main/res/mipmap-$DENSITY"
+            mkdir -p "$DIR"
+
+            # 1. Generate ic_launcher.png (Legacy with solid background)
+            convert -size ${CANVAS_LEG}x${CANVAS_LEG} xc:"#1F2226" \
+                \( "$LOGO" -resize ${LOGO_LEG}x${LOGO_LEG} \) \
+                -gravity center -composite "$DIR/ic_launcher.png"
+
+            # 2. Generate ic_launcher_round.png (Round with circular solid background)
+            CENTER=$((CANVAS_LEG / 2))
+            convert -size ${CANVAS_LEG}x${CANVAS_LEG} xc:none \
+                -fill "#1F2226" -draw "circle $CENTER,$CENTER $CENTER,$MARGIN" \
+                temp_circle.png
+            
+            convert temp_circle.png \
+                \( "$LOGO" -resize ${LOGO_LEG}x${LOGO_LEG} \) \
+                -gravity center -composite "$DIR/ic_launcher_round.png"
+            rm temp_circle.png
+
+            # 3. Generate ic_launcher_foreground.png (Adaptive transparent foreground)
+            convert "$LOGO" -resize ${LOGO_ADA}x${LOGO_ADA} \
+                -background none -gravity center -extent ${CANVAS_ADA}x${CANVAS_ADA} \
+                "$DIR/ic_launcher_foreground.png"
+
+        done
+        echo "Android launcher and adaptive icons generated successfully on-the-fly!"
 
     - name: Build with Gradle
       run: ./gradlew assembleDebug assembleRelease
