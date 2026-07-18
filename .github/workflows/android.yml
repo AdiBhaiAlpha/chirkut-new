@@ -61,6 +61,59 @@ jobs:
           cp -r dist app/src/main/assets/www
         fi
 
+    - name: Generate Android Launcher Icons
+      run: |
+        RES_DIR="app/src/main/res"
+        mkdir -p "$RES_DIR/mipmap-mdpi"
+        mkdir -p "$RES_DIR/mipmap-hdpi"
+        mkdir -p "$RES_DIR/mipmap-xhdpi"
+        mkdir -p "$RES_DIR/mipmap-xxhdpi"
+        mkdir -p "$RES_DIR/mipmap-xxxhdpi"
+        
+        # Clean up any existing launcher icons to prevent duplicate resource conflicts
+        for dir in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+          rm -f "$RES_DIR/$dir"/ic_launcher*
+        done
+
+        # Find the source logo
+        SRC_LOGO="public/logo.png"
+        if [ ! -f "$SRC_LOGO" ]; then
+          SRC_LOGO="public/logo.jpg"
+        fi
+        
+        echo "Generating Android Launcher Icons from $SRC_LOGO on the runner..."
+        
+        # Generate standard legacy and round icons (32-bit RGBA PNG)
+        # mdpi (48x48)
+        convert "$SRC_LOGO" -strip -resize 48x48 png32:"$RES_DIR/mipmap-mdpi/ic_launcher.png"
+        convert "$SRC_LOGO" -strip -resize 48x48 png32:"$RES_DIR/mipmap-mdpi/ic_launcher_round.png"
+        # hdpi (72x72)
+        convert "$SRC_LOGO" -strip -resize 72x72 png32:"$RES_DIR/mipmap-hdpi/ic_launcher.png"
+        convert "$SRC_LOGO" -strip -resize 72x72 png32:"$RES_DIR/mipmap-hdpi/ic_launcher_round.png"
+        # xhdpi (96x96)
+        convert "$SRC_LOGO" -strip -resize 96x96 png32:"$RES_DIR/mipmap-xhdpi/ic_launcher.png"
+        convert "$SRC_LOGO" -strip -resize 96x96 png32:"$RES_DIR/mipmap-xhdpi/ic_launcher_round.png"
+        # xxhdpi (144x144)
+        convert "$SRC_LOGO" -strip -resize 144x144 png32:"$RES_DIR/mipmap-xxhdpi/ic_launcher.png"
+        convert "$SRC_LOGO" -strip -resize 144x144 png32:"$RES_DIR/mipmap-xxhdpi/ic_launcher_round.png"
+        # xxxhdpi (192x192)
+        convert "$SRC_LOGO" -strip -resize 192x192 png32:"$RES_DIR/mipmap-xxxhdpi/ic_launcher.png"
+        convert "$SRC_LOGO" -strip -resize 192x192 png32:"$RES_DIR/mipmap-xxxhdpi/ic_launcher_round.png"
+
+        # Generate adaptive foreground icons with safe padding margins (content is scaled to ~60% of canvas)
+        # mdpi (108x108 target, 66x66 content)
+        convert "$SRC_LOGO" -strip -resize 66x66 -background none -gravity center -extent 108x108 png32:"$RES_DIR/mipmap-mdpi/ic_launcher_foreground.png"
+        # hdpi (162x162 target, 100x100 content)
+        convert "$SRC_LOGO" -strip -resize 100x100 -background none -gravity center -extent 162x162 png32:"$RES_DIR/mipmap-hdpi/ic_launcher_foreground.png"
+        # xhdpi (216x216 target, 132x132 content)
+        convert "$SRC_LOGO" -strip -resize 132x132 -background none -gravity center -extent 216x216 png32:"$RES_DIR/mipmap-xhdpi/ic_launcher_foreground.png"
+        # xxhdpi (324x324 target, 198x198 content)
+        convert "$SRC_LOGO" -strip -resize 198x198 -background none -gravity center -extent 324x324 png32:"$RES_DIR/mipmap-xxhdpi/ic_launcher_foreground.png"
+        # xxxhdpi (432x432 target, 264x264 content)
+        convert "$SRC_LOGO" -strip -resize 264x264 -background none -gravity center -extent 432x432 png32:"$RES_DIR/mipmap-xxxhdpi/ic_launcher_foreground.png"
+
+        echo "All launcher icons generated successfully!"
+
     - name: Build with Gradle
       run: ./gradlew assembleDebug assembleRelease
       continue-on-error: true

@@ -1,0 +1,9 @@
+# Ensure binary files are treated as binary and never corrupted by line ending normalization
+*.png binary
+*.webp binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.jar binary
+*.aar binary
+*.apk binary
