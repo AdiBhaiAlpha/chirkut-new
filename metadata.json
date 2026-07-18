@@ -1,0 +1,6 @@
+{
+  "name": "চিরকুট",
+  "description": "বন্ধু ও প্রিয়জনদের সাথে ব্যক্তিগত ডিজিটাল চিঠি (চিরকুট) এবং পাবলিক টুইট শেয়ার করার একটি অত্যন্ত আধুনিক ও দৃষ্টিনন্দন সামাজিক প্ল্যাটফর্ম।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

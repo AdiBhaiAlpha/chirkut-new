@@ -1,0 +1,1427 @@
+<!-- SPLASH SCREEN OVERLAY (Shows for 3 seconds) -->
+<div *ngIf="showSplashScreen()" 
+     class="fixed inset-0 z-100 bg-paper flex flex-col items-center justify-center select-none transition-all duration-500 ease-in-out">
+  <div class="flex flex-col items-center gap-6 animate-fade-in text-center px-4">
+    <!-- Beautiful Logo Icon with Soft Pulsing Animation -->
+    <div class="w-24 h-24 rounded-3xl bg-gradient-to-tr from-clay to-amber-500 text-white flex items-center justify-center shadow-lg relative overflow-hidden animate-pulse">
+      <mat-icon class="text-5xl leading-none w-auto h-auto" style="font-size: 52px;">history_edu</mat-icon>
+      <!-- Subtle reflection accent -->
+      <div class="absolute inset-0 bg-gradient-to-t from-white/0 to-white/20"></div>
+    </div>
+
+    <!-- App Name -->
+    <div>
+      <h1 class="text-4xl font-extrabold tracking-tight text-clay mb-2 font-sans">চিরকুট</h1>
+      <p class="text-xs text-ink/50 font-medium font-sans max-w-xs leading-relaxed">প্রিয়জনদের সাথে ডিজিটাল চিরকুট এবং পাবলিক টুইট বিনিময় করার দৃষ্টিনন্দন সামাজিক প্ল্যাটফর্ম</p>
+    </div>
+
+    <!-- Jumping Dots Loader (Facebook-style dots loading) -->
+    <div class="flex items-center gap-2 mt-4 select-none">
+      <div class="w-3.5 h-3.5 rounded-full bg-clay animate-bounce" style="animation-delay: 0.0s"></div>
+      <div class="w-3.5 h-3.5 rounded-full bg-clay animate-bounce" style="animation-delay: 0.15s"></div>
+      <div class="w-3.5 h-3.5 rounded-full bg-clay animate-bounce" style="animation-delay: 0.3s"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Beautiful Repost Confirm Modal -->
+<div *ngIf="repostTarget()" 
+     class="fixed inset-0 z-100 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-fade-in">
+  <div class="bg-paper border border-ink/5 rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4 text-center transform scale-100 transition-all duration-300">
+    <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center mx-auto shadow-sm">
+      <mat-icon class="text-2xl">repeat</mat-icon>
+    </div>
+    
+    <div>
+      <h3 class="text-base font-bold text-ink mb-1.5">রি-পোস্ট নিশ্চিত করুন</h3>
+      <p class="text-xs text-ink/60 leading-relaxed">
+        আপনি কি @{{ repostTarget()?.username }} এর এই টুইটটি আপনার প্রোফাইলে রি-পোস্ট করতে চান? এটি অন্যান্য বন্ধুদের হোমপেজেও প্রদর্শিত হবে।
+      </p>
+    </div>
+
+    <!-- Inner snippet of the tweet to be reposted -->
+    <div class="bg-paper-dark border border-ink/5 p-3.5 rounded-xl text-left text-xs mb-1">
+      <div class="flex items-center gap-2 mb-1.5">
+        <img [src]="repostTarget()?.avatar" class="w-5.5 h-5.5 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+        <span class="font-bold text-ink/80">{{ repostTarget()?.displayName }}</span>
+      </div>
+      <p class="text-ink/70 leading-relaxed truncate">{{ repostTarget()?.content }}</p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button (click)="repostTarget.set(null)" 
+              class="flex-1 py-2.5 bg-paper-dark hover:bg-ink/5 text-ink/70 text-xs font-bold rounded-xl cursor-pointer transition-all">
+        বাতিল করুন
+      </button>
+      <button (click)="executeRepost()" 
+              class="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer transition-all flex items-center justify-center gap-1">
+        <mat-icon class="text-sm">check</mat-icon> হ্যাঁ, করুন
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div *ngIf="showToast()" 
+     class="fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-4 rounded-xl shadow-lg border transition-all duration-300 translate-y-0"
+     [class.bg-emerald-50]="showToast()?.type === 'success'"
+     [class.border-emerald-200]="showToast()?.type === 'success'"
+     [class.text-emerald-800]="showToast()?.type === 'success'"
+     [class.bg-red-50]="showToast()?.type === 'error'"
+     [class.border-red-200]="showToast()?.type === 'error'"
+     [class.text-red-800]="showToast()?.type === 'error'"
+     [class.bg-blue-50]="showToast()?.type === 'info'"
+     [class.border-blue-200]="showToast()?.type === 'info'"
+     [class.text-blue-800]="showToast()?.type === 'info'"
+     id="toast-notif">
+  <mat-icon class="text-xl">
+    {{ showToast()?.type === 'success' ? 'check_circle' : showToast()?.type === 'error' ? 'error' : 'info' }}
+  </mat-icon>
+  <span class="font-medium text-sm leading-none">{{ showToast()?.message }}</span>
+</div>
+
+<!-- Main Application Shell -->
+<div class="min-h-screen flex flex-col bg-paper-dark text-ink antialiased">
+
+  <!-- ========================================== -->
+  <!-- 1. UNAUTHENTICATED FLOW (LOGIN / REGISTER) -->
+  <!-- ========================================== -->
+  <div *ngIf="!isLoggedIn()" class="flex-1 flex flex-col items-center justify-center p-4 min-h-screen" id="unauth-view">
+    
+    <!-- Branding Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-clay-light text-clay mb-3 border border-clay/10 shadow-sm">
+        <mat-icon class="text-4xl" style="font-size: 44px; width:44px; height:44px;">history_edu</mat-icon>
+      </div>
+      <h1 class="text-4xl font-bold tracking-tight text-ink font-sans mb-1">চিরকুট</h1>
+      <p class="text-sm text-ink/60 max-w-sm mx-auto">প্রিয়জনদের সাথে ডিজিটাল চিরকুট এবং পাবলিক টুইট বিনিময় করার দৃষ্টিনন্দন সামাজিক প্ল্যাটফর্ম</p>
+    </div>
+
+    <!-- Auth Containers -->
+    <div class="w-full max-w-md bg-paper border border-ink/5 rounded-2xl shadow-md p-6 sm:p-8 relative overflow-hidden transition-all duration-300" id="auth-card">
+      
+      <!-- Login View -->
+      <div *ngIf="activeView() === 'home' || activeView() === 'dashboard'" class="flex flex-col gap-5">
+        <div class="border-b border-ink/5 pb-3">
+          <h2 class="text-2xl font-bold text-ink leading-tight">অ্যাকাউন্টে লগইন করুন</h2>
+          <p class="text-xs text-ink/50 mt-1">মোবাইল নম্বর ও গোপন পাসওয়ার্ড দিয়ে শুরু করুন</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="flex flex-col gap-4">
+          <!-- Mobile Input -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-ink/75 flex items-center gap-1">
+              <mat-icon class="text-base select-none">phone_iphone</mat-icon> মোবাইল নম্বর
+            </label>
+            <input type="text" 
+                   formControlName="mobile"
+                   placeholder="যেমন: ০১৭১২৩৪৫৬৭৮" 
+                   class="w-full px-4 py-3 bg-paper-dark border border-ink/10 rounded-xl focus:outline-none focus:border-clay focus:ring-1 focus:ring-clay/30 text-sm font-sans tracking-wide transition-all" />
+            <span *ngIf="loginForm.get('mobile')?.touched && loginForm.get('mobile')?.invalid" class="text-xs text-red-600 font-medium">১১ সংখ্যার সঠিক মোবাইল নম্বর প্রদান করুন।</span>
+          </div>
+
+          <!-- Password Input -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-ink/75 flex items-center gap-1">
+              <mat-icon class="text-base select-none">lock</mat-icon> পাসওয়ার্ড
+            </label>
+            <input type="password" 
+                   formControlName="password"
+                   placeholder="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড" 
+                   class="w-full px-4 py-3 bg-paper-dark border border-ink/10 rounded-xl focus:outline-none focus:border-clay focus:ring-1 focus:ring-clay/30 text-sm font-sans transition-all" />
+            <span *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="text-xs text-red-600 font-medium">পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।</span>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" 
+                  [disabled]="loginForm.invalid || isSubmitting()"
+                  class="w-full py-3.5 bg-clay hover:bg-clay-hover disabled:bg-clay/40 text-white rounded-xl font-semibold text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all">
+            <mat-icon *ngIf="!isSubmitting()" class="text-lg">login</mat-icon>
+            <span *ngIf="!isSubmitting()">লগইন করুন</span>
+            <div *ngIf="isSubmitting()" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          </button>
+        </form>
+
+        <div class="text-center mt-4 pt-4 border-t border-ink/5">
+          <p class="text-xs text-ink/60">
+            চিরকুটে নতুন? 
+            <button (click)="activeView.set('settings')" class="text-clay hover:underline font-bold cursor-pointer ml-1">একটি নতুন অ্যাকাউন্ট তৈরি করুন</button>
+          </p>
+        </div>
+      </div>
+
+      <!-- Register View (Using Settings as temporary unauth toggle value) -->
+      <div *ngIf="activeView() === 'settings'" class="flex flex-col gap-5">
+        <div class="border-b border-ink/5 pb-3">
+          <h2 class="text-2xl font-bold text-ink leading-tight">নতুন অ্যাকাউন্ট তৈরি করুন</h2>
+          <p class="text-xs text-ink/50 mt-1">চিরকুটের জগতে যুক্ত হতে আপনার তথ্যগুলো প্রদান করুন</p>
+        </div>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="flex flex-col gap-4">
+          
+          <!-- Avatar Uploader -->
+          <div class="flex flex-col items-center justify-center gap-3 bg-clay-light/50 border border-dashed border-clay/20 p-4 rounded-xl">
+            <div class="relative w-20 h-20 rounded-full border-2 border-clay bg-paper overflow-hidden flex items-center justify-center shadow-inner">
+              <img *ngIf="registerAvatarBase64()" [src]="registerAvatarBase64()" alt="Preview" class="w-full h-full object-cover" referrerpolicy="no-referrer" />
+              <mat-icon *ngIf="!registerAvatarBase64()" class="text-3xl text-clay">account_circle</mat-icon>
+            </div>
+            <label class="px-4 py-2 bg-paper border border-clay/30 hover:bg-clay-light rounded-lg text-xs font-bold text-clay cursor-pointer transition-all flex items-center gap-1.5 shadow-sm">
+              <mat-icon class="text-sm">photo_camera</mat-icon>
+              প্রোফাইল ছবি দিন (আবশ্যক)
+              <input type="file" (change)="onRegisterAvatarSelected($event)" accept="image/png, image/jpeg, image/webp" class="hidden" />
+            </label>
+            <span class="text-[10px] text-ink/50 text-center">JPG, PNG অথবা WEBP (সর্বোচ্চ ৩ মেগাবাইট)</span>
+          </div>
+
+          <!-- Grid For Register Form Inputs -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Mobile -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-ink/75 flex items-center gap-1">মোবাইল নম্বর</label>
+              <input type="text" formControlName="mobile" placeholder="০১XXXXXXXXX" class="w-full px-3.5 py-2.5 bg-paper-dark border border-ink/10 rounded-xl focus:outline-none focus:border-clay text-xs font-sans tracking-wide" />
+            </div>
+
+            <!-- Password -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-ink/75 flex items-center gap-1">পাসওয়ার্ড</label>
+              <input type="password" formControlName="password" placeholder="কমপক্ষে ৬ অক্ষরের" class="w-full px-3.5 py-2.5 bg-paper-dark border border-ink/10 rounded-xl focus:outline-none focus:border-clay text-xs font-sans" />
+            </div>
+
+            <!-- Username -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-ink/75 flex items-center gap-1">ইউনিক ইউজারনেম (ইংরেজি)</label>
+              <input type="text" formControlName="username" placeholder="যেমন: chitron_12" class="w-full px-3.5 py-2.5 bg-paper-dark border border-ink/10 rounded-xl focus:outline-none focus:border-clay text-xs font-sans" />
+            </div>
+
+            <!-- Display Name -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-ink/75 flex items-center gap-1">ডিসপ্লে নাম (বাংলা/ইংরেজি)</label>
+              <input type="text" formControlName="displayName" placeholder="যেমন: চিত্রন ভট্টাচার্য" class="w-full px-3.5 py-2.5 bg-paper-dark border border-ink/10 rounded-xl focus:outline-none focus:border-clay text-xs font-sans" />
+            </div>
+          </div>
+
+          <!-- Bio -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-ink/75">আপনার সংক্ষিপ্ত বায়ো (ঐচ্ছিক)</label>
+            <textarea formControlName="bio" placeholder="নিজের সম্পর্কে কিছু লিখুন..." rows="2" class="w-full px-3.5 py-2.5 bg-paper-dark border border-ink/10 rounded-xl focus:outline-none focus:border-clay text-xs resize-none"></textarea>
+          </div>
+
+          <!-- Submit Register Button -->
+          <button type="submit" 
+                  [disabled]="registerForm.invalid || !registerAvatarBase64() || isSubmitting()"
+                  class="w-full py-3 bg-clay hover:bg-clay-hover disabled:bg-clay/40 text-white rounded-xl font-semibold text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all mt-2">
+            <mat-icon *ngIf="!isSubmitting()" class="text-lg">person_add</mat-icon>
+            <span *ngIf="!isSubmitting()">নিবন্ধন সম্পন্ন করুন</span>
+            <div *ngIf="isSubmitting()" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          </button>
+        </form>
+
+        <div class="text-center mt-4 pt-4 border-t border-ink/5">
+          <p class="text-xs text-ink/60">
+            ইতিমধ্যে অ্যাকাউন্ট আছে? 
+            <button (click)="activeView.set('home')" class="text-clay hover:underline font-bold cursor-pointer ml-1">লগইন করুন</button>
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- 2. AUTHENTICATED PLATFORM SHELL            -->
+  <!-- ========================================== -->
+  <div *ngIf="isLoggedIn()" class="flex-1 flex flex-col min-h-screen relative" id="auth-view">
+    
+    <!-- TOP NAVIGATION BAR -->
+    <header class="sticky top-0 z-30 bg-paper/90 backdrop-blur-md border-b border-ink/5 shadow-sm px-4 py-3 flex items-center justify-between gap-4">
+      
+      <!-- Logo Title -->
+      <div class="flex items-center gap-2.5 cursor-pointer" (click)="activeView.set('home')" id="header-logo">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-clay to-amber-500 text-white flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all">
+          <mat-icon class="text-xl leading-none" style="font-size: 22px;">history_edu</mat-icon>
+        </div>
+        <span class="text-xl font-extrabold tracking-tight text-clay font-sans hidden sm:inline">চিরকুট</span>
+      </div>
+
+      <!-- SEARCH BAR (Global Search) -->
+      <div class="flex-1 max-w-md relative" id="global-search-container">
+        <div class="relative w-full">
+          <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40 text-sm">search</mat-icon>
+          <input type="text" 
+                 [value]="searchQuery()"
+                 (input)="searchQuery.set($any($event.target).value); onSearchUsers()"
+                 placeholder="বন্ধুদের ইউজারনেম দিয়ে খুঁজুন..." 
+                 class="w-full pl-10 pr-4 py-2 bg-paper-dark border border-ink/5 rounded-full text-xs font-sans focus:outline-none focus:border-clay focus:ring-1 focus:ring-clay/20 transition-all" />
+          <button *ngIf="searchQuery()" 
+                  (click)="searchQuery.set(''); searchResults.set([])" 
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink/30 hover:text-ink/60 cursor-pointer">
+            <mat-icon class="text-base">cancel</mat-icon>
+          </button>
+        </div>
+
+        <!-- Search Results Dropdown -->
+        <div *ngIf="searchResults().length > 0 && searchQuery()" 
+             class="absolute left-0 right-0 top-full mt-2 bg-paper border border-ink/5 shadow-xl rounded-2xl p-2 z-50 max-h-80 overflow-y-auto">
+          <div class="text-[10px] uppercase tracking-wider font-bold text-ink/40 px-3 py-1.5 border-b border-ink/5">খোঁজার ফলাফল</div>
+          <div *ngFor="let result of searchResults()" 
+               (click)="onOpenProfile(result.username); searchQuery.set(''); searchResults.set([])"
+               class="flex items-center gap-3 p-2 hover:bg-clay-light rounded-xl cursor-pointer transition-all">
+            <img [src]="result.avatar" class="w-9 h-9 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+            <div class="flex-1 min-w-0">
+              <h4 class="text-xs font-bold text-ink truncate leading-tight">{{ result.displayName }}</h4>
+              <p class="text-[10px] font-mono text-ink/50">@{{ result.username }}</p>
+            </div>
+            <mat-icon class="text-clay/60 text-sm">chevron_right</mat-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Panel Controls -->
+      <div class="flex items-center gap-1.5">
+        
+        <!-- Notifications Bell Dropdown Toggle -->
+        <div class="relative">
+          <button (click)="toggleNotificationDropdown()" 
+                  class="w-9 class bg-paper-dark hover:bg-clay-light border border-ink/5 rounded-full p-1.5 flex items-center justify-center relative cursor-pointer transition-all" 
+                  id="notif-bell">
+            <mat-icon class="text-xl text-ink/70">notifications</mat-icon>
+            <span *ngIf="api.unreadNotificationsCount() > 0" 
+                  class="absolute -top-1.5 -right-1 bg-red-600 text-white font-mono text-[9px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center animate-pulse leading-none">
+              {{ api.unreadNotificationsCount() }}
+            </span>
+          </button>
+
+          <!-- Notifications Popup Menu -->
+          <div *ngIf="notificationDropdownOpen()" 
+               class="absolute right-0 top-full mt-3.5 w-80 bg-paper border border-ink/5 shadow-2xl rounded-2xl overflow-hidden z-50">
+            <div class="flex items-center justify-between px-4 py-3 bg-paper-dark border-b border-ink/5">
+              <span class="text-xs font-bold text-ink flex items-center gap-1">
+                <mat-icon class="text-sm">notifications_active</mat-icon> নোটিফিকেশনসমূহ
+              </span>
+              <span *ngIf="api.unreadNotificationsCount() > 0" class="text-[9px] bg-clay/10 text-clay px-2 py-0.5 rounded-full font-bold">নতুন {{ toBanglaDigits(api.unreadNotificationsCount()) }}টি</span>
+            </div>
+            
+            <div class="max-h-80 overflow-y-auto divide-y divide-ink/5" id="notif-dropdown-list">
+              <!-- Empty State -->
+              <div *ngIf="notificationsList().length === 0" class="py-10 text-center flex flex-col items-center justify-center gap-1 text-ink/40">
+                <mat-icon class="text-3xl text-ink/25">notifications_none</mat-icon>
+                <span class="text-xs">কোনো নোটিফিকেশন নেই।</span>
+              </div>
+              
+              <div *ngFor="let n of notificationsList()" 
+                   (click)="onNotificationClick(n)"
+                   class="p-3 hover:bg-clay-light flex gap-3 cursor-pointer transition-all"
+                   [class.bg-clay-light/40]="!n.isRead">
+                <img [src]="n.senderAvatar" class="w-8 h-8 rounded-full object-cover border border-ink/5 flex-shrink-0" alt="Avatar" referrerpolicy="no-referrer" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-ink/85 leading-normal mb-1">{{ n.details }}</p>
+                  <span class="text-[9px] font-medium text-ink/40 flex items-center gap-1">
+                    <mat-icon class="text-xs" style="font-size: 10px; width:10px; height:10px;">schedule</mat-icon> {{ n.timestampFormatted }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="p-2 bg-paper-dark text-center border-t border-ink/5">
+              <button (click)="activeView.set('dashboard'); activeDashboardTab.set('notifications'); notificationDropdownOpen.set(false)" 
+                      class="text-[10px] text-clay font-bold hover:underline cursor-pointer w-full text-center">সকল নোটিফিকেশন দেখুন</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logged In User Avatar Shortcut to settings/profile -->
+        <div (click)="onOpenProfile(currentUser()!.username)" 
+             class="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-paper-dark hover:bg-clay-light border border-ink/5 rounded-full cursor-pointer transition-all">
+          <img [src]="currentUser()!.avatar" class="w-7 h-7 rounded-full object-cover border border-ink/10" alt="Profile" referrerpolicy="no-referrer" />
+          <div class="hidden md:flex flex-col items-start leading-none text-left">
+            <span class="text-[11px] font-bold text-ink truncate max-w-24 flex items-center gap-0.5">
+              {{ currentUser()!.displayName }}
+              <mat-icon *ngIf="currentUser()!.username === 'chirkut_official'" class="text-amber-500 text-[10px] w-auto h-auto leading-none" style="font-size: 10px;">verified</mat-icon>
+            </span>
+            <span class="text-[8px] font-mono text-ink/50">@{{ currentUser()!.username }}</span>
+          </div>
+        </div>
+
+        <!-- Quick Header Logout Button -->
+        <button (click)="onLogout()" 
+                class="flex items-center justify-center w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 transition-all cursor-pointer shadow-sm" 
+                title="লগআউট">
+          <mat-icon class="text-sm">logout</mat-icon>
+        </button>
+
+      </div>
+    </header>
+
+
+    <!-- PRIMARY BODY AREA -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 flex flex-col md:flex-row gap-6 pb-24 md:pb-6">
+      
+      <!-- SIDEBAR NAVIGATION (For Desktop Only) -->
+      <aside class="hidden md:flex flex-col gap-2 w-64 flex-shrink-0">
+        <!-- Tab buttons -->
+        <button (click)="activeView.set('home')" 
+                class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-left cursor-pointer border"
+                [class.bg-clay]="activeView() === 'home'"
+                [class.text-white]="activeView() === 'home'"
+                [class.border-clay]="activeView() === 'home'"
+                [class.bg-paper]="activeView() !== 'home'"
+                [class.text-ink/80]="activeView() !== 'home'"
+                [class.border-ink/5]="activeView() !== 'home'"
+                [class.hover:bg-clay-light]="activeView() !== 'home'">
+          <mat-icon class="text-xl">home</mat-icon> হোম ফিড
+        </button>
+
+        <button (click)="activeView.set('dashboard')" 
+                class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-left cursor-pointer border relative"
+                [class.bg-clay]="activeView() === 'dashboard'"
+                [class.text-white]="activeView() === 'dashboard'"
+                [class.border-clay]="activeView() === 'dashboard'"
+                [class.bg-paper]="activeView() !== 'dashboard'"
+                [class.text-ink/80]="activeView() !== 'dashboard'"
+                [class.border-ink/5]="activeView() !== 'dashboard'"
+                [class.hover:bg-clay-light]="activeView() !== 'dashboard'">
+          <mat-icon class="text-xl">dashboard</mat-icon> ড্যাশবোর্ড
+          <span *ngIf="api.unreadChirkutsCount() > 0" 
+                class="absolute right-4 bg-clay text-white font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center justify-center leading-none">
+            নতুন {{ toBanglaDigits(api.unreadChirkutsCount()) }}
+          </span>
+        </button>
+
+        <button (click)="activeView.set('friends')" 
+                class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-left cursor-pointer border relative"
+                [class.bg-clay]="activeView() === 'friends'"
+                [class.text-white]="activeView() === 'friends'"
+                [class.border-clay]="activeView() === 'friends'"
+                [class.bg-paper]="activeView() !== 'friends'"
+                [class.text-ink/80]="activeView() !== 'friends'"
+                [class.border-ink/5]="activeView() !== 'friends'"
+                [class.hover:bg-clay-light]="activeView() !== 'friends'">
+          <mat-icon class="text-xl">group</mat-icon> বন্ধুবান্ধব ও সন্ধান
+          <span *ngIf="pendingRequests().length > 0" 
+                class="absolute right-4 bg-amber-600 text-white font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center justify-center leading-none">
+            {{ toBanglaDigits(pendingRequests().length) }}
+          </span>
+        </button>
+
+        <button (click)="openSettingsView()" 
+                class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-left cursor-pointer border"
+                [class.bg-clay]="activeView() === 'settings'"
+                [class.text-white]="activeView() === 'settings'"
+                [class.border-clay]="activeView() === 'settings'"
+                [class.bg-paper]="activeView() !== 'settings'"
+                [class.text-ink/80]="activeView() !== 'settings'"
+                [class.border-ink/5]="activeView() !== 'settings'"
+                [class.hover:bg-clay-light]="activeView() !== 'settings'">
+          <mat-icon class="text-xl">settings</mat-icon> প্রোফাইল সেটিংস
+        </button>
+
+        <!-- Profile card banner shortcut -->
+        <div class="mt-4 p-4 rounded-2xl bg-clay-light/50 border border-clay/10 flex flex-col items-center justify-center text-center">
+          <img [src]="currentUser()!.avatar" class="w-16 h-16 rounded-full object-cover border-2 border-clay shadow-sm mb-2" alt="Avatar" referrerpolicy="no-referrer" />
+          <h4 class="text-xs font-bold text-ink leading-tight">{{ currentUser()!.displayName }}</h4>
+          <span class="text-[10px] font-mono text-ink/50 mt-0.5">@{{ currentUser()!.username }}</span>
+          <p class="text-[11px] text-ink/65 italic line-clamp-2 mt-2 px-1">"{{ currentUser()!.bio || 'আমার কোনো বায়ো নেই।' }}"</p>
+          <button (click)="onLogout()" 
+                  class="mt-4 flex items-center justify-center gap-1 w-full py-2 bg-paper hover:bg-red-50 text-red-600 border border-red-200/40 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-sm">
+            <mat-icon class="text-base">logout</mat-icon> লগআউট করুন
+          </button>
+        </div>
+      </aside>
+
+
+      <!-- ACTIVE DYNAMIC VIEW CONTENT AREA -->
+      <section class="flex-1 flex flex-col gap-6 min-w-0">
+
+        <!-- ========================================== -->
+        <!-- VIEW: HOME FEED (Envelopes + Tweets)       -->
+        <!-- ========================================== -->
+        <div *ngIf="activeView() === 'home'" class="flex flex-col gap-6">
+          
+          <!-- LATEST RECEIVED CHIRKUT (PHYSICAL LETTER SHEET VIEW) -->
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center justify-between px-1">
+              <span class="text-sm font-bold text-ink/75 flex items-center gap-1.5">
+                <mat-icon class="text-clay text-lg">mail</mat-icon> সর্বশেষ প্রাপ্ত চিরকুট
+              </span>
+              <span class="text-[11px] font-medium text-clay bg-clay-light px-2.5 py-0.5 rounded-full">নতুন বার্তা</span>
+            </div>
+
+            <!-- CHIRKUT ENVELOPE / PAPER CONTAINER -->
+            <div class="w-full relative rounded-2xl border border-ink/15 shadow-xl p-6 md:p-8 overflow-hidden min-h-[220px] flex flex-col justify-between transition-all duration-500 bg-[#fbf9f4]"
+                 style="background: #faf8f2; box-shadow: inset 0 0 40px rgba(0,0,0,0.02), 0 10px 25px -5px rgba(0,0,0,0.05);"
+                 id="chirkut-paper">
+              
+              <!-- Spiral notebook left binding lines representation -->
+              <div class="absolute left-3 top-0 bottom-0 flex flex-col justify-around py-4 z-10 select-none">
+                <div *ngFor="let i of [1,2,3,4,5,6,7,8]" class="w-3.5 h-3.5 rounded-full border border-ink/20 bg-paper-dark shadow-inner"></div>
+              </div>
+
+              <!-- Notebook Blue Lined Margin representation -->
+              <div class="absolute inset-0 select-none opacity-40 pointer-events-none" 
+                   style="background: linear-gradient(rgba(163, 72, 39, 0.08) 1px, transparent 1px); background-size: 100% 2.2rem; margin-top: 1.5rem;">
+              </div>
+              
+              <!-- Red margin left bar line -->
+              <div class="absolute left-10 top-0 bottom-0 w-px bg-red-400/25 pointer-events-none select-none"></div>
+
+              <!-- If received empty state -->
+              <div *ngIf="receivedChirkuts().length === 0" 
+                   class="flex-1 flex flex-col items-center justify-center text-center p-4 py-8 text-ink/50 select-none z-10 pl-14">
+                <mat-icon class="text-5xl text-ink/20 mb-2" style="font-size: 48px;">drafts</mat-icon>
+                <h4 class="text-sm font-bold text-ink/70">খামটি এখন খালি!</h4>
+                <p class="text-xs text-ink/50 max-w-xs mt-1">আপনার কোনো প্রাপ্ত চিরকুট নেই। বন্ধুত্বের জোড় তৈরি করুন এবং বন্ধুদের আপনার ইউজারনেম জানিয়ে চিরকুট পাঠাতে বলুন।</p>
+              </div>
+
+              <!-- Chirkut Letter Body if exists -->
+              <div *ngIf="getActiveChirkut()" class="flex-1 flex flex-col justify-between z-10 pl-12">
+                
+                <!-- Sender profile details -->
+                <div class="flex items-start justify-between gap-4 border-b border-ink/5 pb-2">
+                  <div class="flex items-center gap-2.5">
+                    <img [src]="getActiveChirkut()?.senderAvatar" 
+                         class="w-8.5 h-8.5 rounded-full object-cover border-2 border-clay/30 cursor-pointer" 
+                         (click)="onOpenProfile(getActiveChirkut()!.senderUsername)" alt="Avatar" referrerpolicy="no-referrer" />
+                    <div class="flex flex-col text-left leading-none">
+                      <span (click)="onOpenProfile(getActiveChirkut()!.senderUsername)" 
+                            class="text-xs font-bold text-ink hover:text-clay hover:underline cursor-pointer">{{ getActiveChirkut()?.senderDisplayName }}</span>
+                      <span class="text-[9px] font-mono text-ink/40 mt-0.5">@{{ getActiveChirkut()?.senderUsername }}</span>
+                    </div>
+                  </div>
+                  <!-- Time Stamp -->
+                  <div class="text-right leading-none flex flex-col items-end gap-1 select-none">
+                    <span class="text-[10px] font-medium text-ink/50">{{ getActiveChirkut()?.createdAtFormatted }}</span>
+                    <span class="text-[8px] bg-emerald-500/10 text-emerald-700 font-bold px-1.5 py-0.5 rounded-full">ডেলিভারড</span>
+                  </div>
+                </div>
+
+                <!-- Written Content in stylized cursive font representation -->
+                <div class="py-4 flex-1 text-left min-h-[90px] flex items-center justify-start">
+                  <p class="text-sm md:text-base text-ink font-medium leading-relaxed italic tracking-wide whitespace-pre-wrap pl-2 select-text" 
+                     style="font-family: inherit;">
+                    {{ getActiveChirkut()?.content }}
+                  </p>
+                </div>
+
+                <!-- Footer Envelope Signature Clay Seal representation -->
+                <div class="border-t border-ink/5 pt-2 flex items-center justify-between">
+                  <!-- Pagination sliders -->
+                  <div class="flex items-center gap-1 select-none">
+                    <button [disabled]="currentChirkutIndex() === receivedChirkuts().length - 1"
+                            (click)="onChirkutPageChanged(currentChirkutIndex() + 1)"
+                            class="w-7 h-7 bg-paper border border-ink/10 hover:bg-clay-light disabled:opacity-40 text-ink/70 rounded-full flex items-center justify-center cursor-pointer transition-all">
+                      <mat-icon class="text-sm leading-none">chevron_left</mat-icon>
+                    </button>
+                    
+                    <span class="text-[10px] font-mono font-semibold text-ink/60">
+                      {{ toBanglaDigits(currentChirkutIndex() + 1) }} / {{ toBanglaDigits(receivedChirkuts().length) }}
+                    </span>
+                    
+                    <button [disabled]="currentChirkutIndex() === 0"
+                            (click)="onChirkutPageChanged(currentChirkutIndex() - 1)"
+                            class="w-7 h-7 bg-paper border border-ink/10 hover:bg-clay-light disabled:opacity-40 text-ink/70 rounded-full flex items-center justify-center cursor-pointer transition-all">
+                      <mat-icon class="text-sm leading-none">chevron_right</mat-icon>
+                    </button>
+                  </div>
+
+                  <!-- clay wax seal graphic label -->
+                  <div class="flex items-center gap-1 select-none text-[10px] text-clay font-bold opacity-85">
+                    <mat-icon class="text-xs">verified</mat-icon> <span>চিরকুট সীল মোহর</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+
+          <!-- TWEET GENERATION INPUT BOX -->
+          <div class="bg-paper border border-ink/5 rounded-2xl shadow-sm p-4 flex flex-col gap-3">
+            <div class="flex gap-3">
+              <img [src]="currentUser()!.avatar" class="w-10 h-10 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+              
+              <form [formGroup]="tweetForm" class="flex-1">
+                <textarea formControlName="content" 
+                          placeholder="আপনার নতুন একটি টুইট প্রকাশ করুন (সর্বোচ্চ ৫০ শব্দ)..." 
+                          rows="3" 
+                          class="w-full bg-paper-dark border border-ink/5 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-clay focus:ring-1 focus:ring-clay/10 transition-all resize-none"></textarea>
+              </form>
+            </div>
+
+            <!-- Form controllers and word count badge indicators -->
+            <div class="flex items-center justify-between border-t border-ink/5 pt-3 pl-13">
+              <div class="flex items-center gap-1.5">
+                <!-- Word count indicator -->
+                <span class="text-[11px] px-2 py-0.5 rounded-full font-bold"
+                      [class.bg-clay-light]="getTweetWordCount() <= 40"
+                      [class.text-clay]="getTweetWordCount() <= 40"
+                      [class.bg-amber-100]="getTweetWordCount() > 40 && getTweetWordCount() <= 50"
+                      [class.text-amber-800]="getTweetWordCount() > 40 && getTweetWordCount() <= 50"
+                      [class.bg-red-100]="getTweetWordCount() > 50"
+                      [class.text-red-800]="getTweetWordCount() > 50">
+                  {{ toBanglaDigits(getTweetWordCount()) }} / ৫০ শব্দ
+                </span>
+                <span *ngIf="getTweetWordCount() > 50" class="text-[9px] text-red-600 font-bold">টুইটটি খুব দীর্ঘ!</span>
+              </div>
+
+              <button (click)="onPublishTweet()"
+                      [disabled]="tweetForm.invalid || getTweetWordCount() > 50 || isSubmitting()"
+                      class="px-4 py-2 bg-clay hover:bg-clay-hover disabled:bg-clay/30 text-white text-xs font-bold rounded-full shadow-sm cursor-pointer transition-all flex items-center gap-1">
+                <mat-icon class="text-sm">send</mat-icon> প্রকাশ করুন
+              </button>
+            </div>
+          </div>
+
+
+          <!-- TWEETS PUBLIC FEED -->
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center gap-1.5 px-1">
+              <mat-icon class="text-clay text-lg">feed</mat-icon>
+              <h3 class="text-sm font-bold text-ink/75">সামাজিক টুইট বোর্ড</h3>
+            </div>
+
+            <div *ngIf="tweets().length === 0" class="py-16 text-center bg-paper rounded-2xl border border-ink/5 text-ink/50 select-none flex flex-col items-center justify-center gap-1">
+              <mat-icon class="text-4xl text-ink/20">forum</mat-icon>
+              <h4 class="text-xs font-bold">এখনো কোনো টুইট নেই!</h4>
+              <p class="text-[11px] mt-0.5">সবাইকে প্রথম টুইট প্রকাশ করার অনুরোধ জানান।</p>
+            </div>
+
+            <!-- Individual Tweet item list iteration -->
+            <div *ngFor="let tweet of tweets()" class="bg-paper border border-ink/5 rounded-2xl p-4 md:p-5 shadow-sm hover:shadow transition-all duration-300" id="tweet-card-{{ tweet.id }}">
+              
+              <!-- Repost Header Indicator if it is a repost -->
+              <div *ngIf="tweet.originalTweetId" 
+                   (click)="scrollToTweet(tweet.originalTweetId)"
+                   class="flex items-center gap-1.5 text-[11px] text-green-600 hover:text-green-700 font-bold mb-3 pb-2 border-b border-ink/5 select-none cursor-pointer transition-all">
+                <mat-icon class="text-sm">repeat</mat-icon>
+                <span>রিপোস্ট করা হয়েছে</span>
+                <span class="text-[9px] text-ink/40 font-normal hover:underline ml-auto">(অরিজিনাল টুইট দেখতে এখানে ক্লিক করুন)</span>
+              </div>
+
+              <!-- Header Details -->
+              <div class="flex items-start justify-between gap-4 mb-3">
+                <div class="flex items-center gap-3">
+                  <img [src]="tweet.avatar" 
+                       (click)="onOpenProfile(tweet.username)"
+                       class="w-10 h-10 rounded-full object-cover border border-ink/5 cursor-pointer hover:scale-105 transition-all" alt="Avatar" referrerpolicy="no-referrer" />
+                  <div class="flex flex-col text-left leading-none">
+                    <span (click)="onOpenProfile(tweet.username)" 
+                          class="text-xs font-bold text-ink hover:text-clay hover:underline cursor-pointer flex items-center gap-1">
+                      {{ tweet.displayName }}
+                      <span *ngIf="tweet.username === 'chirkut_official'" class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[8px] font-bold select-none shadow-sm leading-none">
+                        <mat-icon class="text-[9px] w-auto h-auto leading-none" style="font-size: 9px;">verified</mat-icon> অ্যাডমিন
+                      </span>
+                    </span>
+                    <span class="text-[10px] font-mono text-ink/40 mt-0.5">@{{ tweet.username }}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <!-- Unique Clickable Repost Badge -->
+                  <button *ngIf="tweet.originalTweetId" 
+                          (click)="scrollToTweet(tweet.originalTweetId); $event.stopPropagation()"
+                          class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 hover:bg-green-100 border border-green-200 text-green-600 hover:text-green-700 text-[10px] font-bold cursor-pointer transition-all select-none shadow-xs"
+                          title="অরিজিনাল টুইটটি দেখুন">
+                    <mat-icon class="text-[11px] w-auto h-auto leading-none text-green-500" style="font-size: 11px;">repeat</mat-icon>
+                    <span>মূল পোস্ট</span>
+                  </button>
+
+                  <!-- Date published -->
+                  <span class="text-[9px] font-medium text-ink/40">{{ tweet.createdAtFormatted }}</span>
+                </div>
+              </div>
+
+              <!-- Tweet Content text body (hide duplicate text if it's a pure retweet/repost with no comment) -->
+              <p *ngIf="!tweet.originalTweetId || (tweet.content && tweet.content !== tweet.originalTweetContent)" 
+                 class="text-xs md:text-sm text-ink leading-relaxed mb-4 text-left select-text whitespace-pre-wrap">{{ tweet.content }}</p>
+
+              <!-- Nested original tweet reference if is a REPOST -->
+              <div *ngIf="tweet.originalTweetId" class="border border-ink/10 bg-paper-dark rounded-xl p-3.5 mb-4 text-left">
+                <div class="flex items-center gap-2.5 mb-2">
+                  <img [src]="tweet.originalTweetAvatar" class="w-6 h-6 rounded-full object-cover border border-ink/5" alt="Original" referrerpolicy="no-referrer" />
+                  <div class="flex flex-col leading-none">
+                    <span class="text-[10px] font-bold text-ink/80 flex items-center gap-1">
+                      {{ tweet.originalTweetDisplayName }}
+                      <span *ngIf="tweet.originalTweetAuthor === 'chirkut_official'" class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[8px] font-bold select-none shadow-sm leading-none">
+                        <mat-icon class="text-[9px] w-auto h-auto leading-none" style="font-size: 9px;">verified</mat-icon> অ্যাডমিন
+                      </span>
+                    </span>
+                    <span class="text-[8px] font-mono text-ink/40">@{{ tweet.originalTweetAuthor }}</span>
+                  </div>
+                </div>
+                <p class="text-[11px] text-ink/70 leading-relaxed italic">"{{ tweet.originalTweetContent }}"</p>
+              </div>
+
+              <!-- Action button bar footer -->
+              <div class="flex items-center justify-between border-t border-ink/5 pt-3 text-ink/65 text-xs">
+                
+                <!-- Love button -->
+                <button (click)="toggleLove(tweet)" 
+                        class="flex items-center gap-1.5 hover:text-red-600 transition-all cursor-pointer group">
+                  <mat-icon class="text-lg transition-all group-hover:scale-115"
+                            [class.text-red-500]="tweet.loves.includes(currentUser()!.username)"
+                            [class.fill-current]="tweet.loves.includes(currentUser()!.username)">
+                    {{ tweet.loves.includes(currentUser()!.username) ? 'favorite' : 'favorite_border' }}
+                  </mat-icon>
+                  <span class="font-semibold text-[11px]">{{ tweet.lovesCountFormatted }}</span>
+                </button>
+
+                <!-- Comment trigger -->
+                <button (click)="onToggleCommentBox(tweet.id)" 
+                        class="flex items-center gap-1.5 hover:text-clay transition-all cursor-pointer group">
+                  <mat-icon class="text-lg transition-all group-hover:scale-115">chat_bubble_outline</mat-icon>
+                  <span class="font-semibold text-[11px]">{{ tweet.commentsCountFormatted }}</span>
+                </button>
+
+                <!-- Repost trigger -->
+                <button (click)="onRepost(tweet)" 
+                        class="flex items-center gap-1.5 hover:text-green-600 transition-all cursor-pointer group"
+                        [class.text-green-600]="hasReposted(tweet.id)">
+                  <mat-icon class="text-lg transition-all group-hover:scale-115"
+                            [class.fill-current]="hasReposted(tweet.id)">repeat</mat-icon>
+                  <span class="font-semibold text-[11px]">{{ tweet.repostCountFormatted }}</span>
+                </button>
+
+                <!-- Share trigger -->
+                <button (click)="onShareTweet(tweet)" 
+                        class="flex items-center gap-1.5 hover:text-blue-600 transition-all cursor-pointer group">
+                  <mat-icon class="text-lg transition-all group-hover:scale-115">share</mat-icon>
+                </button>
+
+              </div>
+
+              <!-- SLIDING COMMENTS PANEL SECTION -->
+              <div *ngIf="commentingTweetId() === tweet.id" class="mt-4 pt-4 border-t border-ink/5 flex flex-col gap-4">
+                
+                <!-- Comment list iteration -->
+                <div *ngIf="tweet.comments.length > 0" class="flex flex-col gap-3">
+                  <div *ngFor="let comment of tweet.comments" class="flex gap-3 text-left">
+                    <img [src]="comment.avatar" class="w-8 h-8 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+                    <div class="flex-1 bg-paper-dark rounded-xl px-3.5 py-2.5">
+                      <div class="flex items-center justify-between gap-4 mb-1">
+                        <span class="text-[11px] font-bold text-ink flex items-center gap-1">
+                          {{ comment.displayName }}
+                          <span *ngIf="comment.username === 'chirkut_official'" class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[8px] font-bold select-none shadow-sm leading-none">
+                            <mat-icon class="text-[9px] w-auto h-auto leading-none" style="font-size: 9px;">verified</mat-icon> অ্যাডমিন
+                          </span>
+                        </span>
+                        <span class="text-[8px] text-ink/40">{{ comment.createdAtFormatted }}</span>
+                      </div>
+                      <p class="text-xs text-ink/80 leading-normal">{{ comment.content }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Empty comments state -->
+                <div *ngIf="tweet.comments.length === 0" class="py-4 text-center text-[11px] text-ink/40">
+                  এখনো কোনো মন্তব্য নেই। আপনার মন্তব্যটি প্রথম যুক্ত করুন!
+                </div>
+
+                <!-- Input Comment Form submission -->
+                <div class="flex items-center gap-2.5">
+                  <img [src]="currentUser()!.avatar" class="w-8.5 h-8.5 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+                  <form [formGroup]="commentForm" (ngSubmit)="onSubmitComment(tweet.id)" class="flex-1 flex gap-2">
+                    <input type="text" 
+                           formControlName="content"
+                           placeholder="আপনার মন্তব্যটি লিখুন..." 
+                           class="flex-1 bg-paper-dark border border-ink/5 px-3.5 py-2 rounded-xl text-xs focus:outline-none focus:border-clay" />
+                    <button type="submit" 
+                            [disabled]="commentForm.invalid || isSubmitting()"
+                            class="px-4 py-2 bg-clay text-white rounded-xl text-xs font-bold hover:bg-clay-hover disabled:bg-clay/40 transition-all cursor-pointer">
+                      যুক্ত করুন
+                    </button>
+                  </form>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+
+        <!-- ========================================== -->
+        <!-- VIEW: DASHBOARD PANEL CONTROLLER           -->
+        <!-- ========================================== -->
+        <div *ngIf="activeView() === 'dashboard'" class="flex flex-col gap-5">
+          
+          <div class="border-b border-ink/5 pb-2 text-left">
+            <h2 class="text-2xl font-bold text-ink">আমার চিরকুট ড্যাশবোর্ড</h2>
+            <p class="text-xs text-ink/50 mt-0.5">আপনার প্রাপ্ত-পাঠানো চিরকুট, বন্ধু এবং সামগ্রিক রেকর্ড তালিকা পর্যালোচনা করুন</p>
+          </div>
+
+          <!-- STATIC TOTAL STATISTICS RECORD GRID -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="stats-grid">
+            
+            <div class="bg-paper border border-ink/5 p-4 rounded-2xl shadow-sm text-center">
+              <span class="text-[10px] font-bold text-ink/40 uppercase tracking-wider block mb-1">মোট বন্ধু</span>
+              <div class="text-2xl font-bold text-clay font-sans">{{ toBanglaDigits(friendsList().length) }}</div>
+            </div>
+
+            <div class="bg-paper border border-ink/5 p-4 rounded-2xl shadow-sm text-center">
+              <span class="text-[10px] font-bold text-ink/40 uppercase tracking-wider block mb-1">প্রকাশিত টুইট</span>
+              <div class="text-2xl font-bold text-clay font-sans">{{ toBanglaDigits(userTweetsCount()) }}</div>
+            </div>
+
+            <div class="bg-paper border border-ink/5 p-4 rounded-2xl shadow-sm text-center">
+              <span class="text-[10px] font-bold text-ink/40 uppercase tracking-wider block mb-1">পাঠানো চিরকুট</span>
+              <div class="text-2xl font-bold text-clay font-sans">{{ toBanglaDigits(sentChirkuts().length) }}</div>
+            </div>
+
+            <div class="bg-paper border border-ink/5 p-4 rounded-2xl shadow-sm text-center">
+              <span class="text-[10px] font-bold text-ink/40 uppercase tracking-wider block mb-1">প্রাপ্ত চিরকুট</span>
+              <div class="text-2xl font-bold text-clay font-sans">{{ toBanglaDigits(receivedChirkuts().length) }}</div>
+            </div>
+
+          </div>
+
+
+          <!-- DASHBOARD VIEW SWITCHER TABS -->
+          <div class="flex border-b border-ink/5 gap-2 select-none overflow-x-auto pb-px" id="dashboard-tab-selectors">
+            <button (click)="activeDashboardTab.set('received')"
+                    class="px-4 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap"
+                    [class.border-clay]="activeDashboardTab() === 'received'"
+                    [class.text-clay]="activeDashboardTab() === 'received'"
+                    [class.border-transparent]="activeDashboardTab() !== 'received'"
+                    [class.text-ink/60]="activeDashboardTab() !== 'received'">
+              প্রাপ্ত চিরকুটসমূহ ({{ toBanglaDigits(receivedChirkuts().length) }})
+            </button>
+            <button (click)="activeDashboardTab.set('sent')"
+                    class="px-4 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap"
+                    [class.border-clay]="activeDashboardTab() === 'sent'"
+                    [class.text-clay]="activeDashboardTab() === 'sent'"
+                    [class.border-transparent]="activeDashboardTab() !== 'sent'"
+                    [class.text-ink/60]="activeDashboardTab() !== 'sent'">
+              পাঠানো চিরকুটসমূহ ({{ toBanglaDigits(sentChirkuts().length) }})
+            </button>
+            <button (click)="activeDashboardTab.set('requests')"
+                    class="px-4 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap relative"
+                    [class.border-clay]="activeDashboardTab() === 'requests'"
+                    [class.text-clay]="activeDashboardTab() === 'requests'"
+                    [class.border-transparent]="activeDashboardTab() !== 'requests'"
+                    [class.text-ink/60]="activeDashboardTab() !== 'requests'">
+              বন্ধুত্বের অনুরোধ ({{ toBanglaDigits(pendingRequests().length) }})
+              <span *ngIf="pendingRequests().length > 0" class="absolute -top-0.5 -right-1.5 w-1.5 h-1.5 bg-red-600 rounded-full animate-ping"></span>
+            </button>
+            <button (click)="activeDashboardTab.set('notifications')"
+                    class="px-4 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap"
+                    [class.border-clay]="activeDashboardTab() === 'notifications'"
+                    [class.text-clay]="activeDashboardTab() === 'notifications'"
+                    [class.border-transparent]="activeDashboardTab() !== 'notifications'"
+                    [class.text-ink/60]="activeDashboardTab() !== 'notifications'">
+              কার্যক্রম লগ
+            </button>
+          </div>
+
+
+          <!-- TAB: RECEIVED CHIRKUTS GRID -->
+          <div *ngIf="activeDashboardTab() === 'received'" class="flex flex-col gap-4">
+            <div *ngIf="receivedChirkuts().length === 0" class="py-16 text-center bg-paper rounded-2xl border border-ink/5 text-ink/50 select-none">
+              <mat-icon class="text-4xl text-ink/20">mail_outline</mat-icon>
+              <h4 class="text-xs font-bold mt-1">কোনো প্রাপ্ত চিরকুট নেই।</h4>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div *ngFor="let c of receivedChirkuts()" 
+                   class="bg-paper border border-ink/5 p-4 rounded-xl shadow-sm text-left relative flex flex-col justify-between"
+                   [class.border-clay/20]="!c.isRead"
+                   [class.bg-clay-light/20]="!c.isRead">
+                <span *ngIf="!c.isRead" class="absolute top-3 right-3 bg-clay text-white font-bold text-[8px] px-1.5 py-0.5 rounded-full select-none">অপঠিত</span>
+                <div>
+                  <div class="flex items-center gap-2.5 border-b border-ink/5 pb-2 mb-2">
+                    <img [src]="c.senderAvatar" class="w-7 h-7 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+                    <div class="flex flex-col">
+                      <span class="text-xs font-bold text-ink">{{ c.senderDisplayName }}</span>
+                      <span class="text-[9px] font-mono text-ink/40">@{{ c.senderUsername }}</span>
+                    </div>
+                  </div>
+                  <p class="text-xs text-ink/80 leading-relaxed font-medium italic min-h-[50px] whitespace-pre-wrap">"{{ c.content }}"</p>
+                </div>
+                <div class="border-t border-ink/5 pt-2 mt-2 flex items-center justify-between text-[10px] text-ink/40">
+                  <span class="flex items-center gap-1"><mat-icon class="text-xs" style="font-size:12px;">schedule</mat-icon> {{ c.createdAtFormatted }}</span>
+                  <button (click)="activeView.set('home'); currentChirkutIndex.set(receivedChirkuts().indexOf(c)); markChirkutAsRead(c.id)"
+                          class="text-clay hover:underline font-bold select-none cursor-pointer">চিঠির খামে দেখুন</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- TAB: SENT CHIRKUTS GRID -->
+          <div *ngIf="activeDashboardTab() === 'sent'" class="flex flex-col gap-4">
+            <div *ngIf="sentChirkuts().length === 0" class="py-16 text-center bg-paper rounded-2xl border border-ink/5 text-ink/50 select-none">
+              <mat-icon class="text-4xl text-ink/20">outbox</mat-icon>
+              <h4 class="text-xs font-bold mt-1">কোনো পাঠানো চিরকুট নেই।</h4>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div *ngFor="let c of sentChirkuts()" class="bg-paper border border-ink/5 p-4 rounded-xl shadow-sm text-left flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center gap-2.5 border-b border-ink/5 pb-2 mb-2">
+                    <div class="flex flex-col">
+                      <span class="text-xs font-bold text-ink">প্রাপক: {{ c.receiverDisplayName }}</span>
+                      <span class="text-[9px] font-mono text-ink/40">@{{ c.receiverUsername }}</span>
+                    </div>
+                  </div>
+                  <p class="text-xs text-ink/80 leading-relaxed font-medium italic min-h-[50px] whitespace-pre-wrap">"{{ c.content }}"</p>
+                </div>
+                <div class="border-t border-ink/5 pt-2 mt-2 flex items-center justify-between text-[10px] text-ink/40">
+                  <span class="flex items-center gap-1"><mat-icon class="text-xs" style="font-size:12px;">schedule</mat-icon> {{ c.createdAtFormatted }}</span>
+                  <span class="text-emerald-600 font-bold flex items-center gap-0.5"><mat-icon class="text-xs" style="font-size:12px;">done_all</mat-icon> ডেলিভারড</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- TAB: FRIEND REQUESTS MANAGEMENT -->
+          <div *ngIf="activeDashboardTab() === 'requests'" class="flex flex-col gap-4">
+            <div *ngIf="pendingRequests().length === 0" class="py-16 text-center bg-paper rounded-2xl border border-ink/5 text-ink/50 select-none">
+              <mat-icon class="text-4xl text-ink/20">people_outline</mat-icon>
+              <h4 class="text-xs font-bold mt-1">কোনো পেন্ডিং বন্ধুত্বের অনুরোধ নেই।</h4>
+            </div>
+
+            <div class="flex flex-col gap-3">
+              <div *ngFor="let req of pendingRequests()" class="bg-paper border border-ink/5 p-4 rounded-xl shadow-sm flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <img [src]="req.avatar" class="w-10 h-10 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+                  <div class="text-left leading-none">
+                    <span (click)="onOpenProfile(req.username)" class="text-xs font-bold text-ink hover:text-clay hover:underline cursor-pointer">{{ req.displayName }}</span>
+                    <span class="text-[10px] font-mono text-ink/40 block mt-0.5">@{{ req.username }}</span>
+                    <span class="text-[9px] text-ink/40 block mt-1">অনুরোধ পাঠিয়েছেন: {{ req.createdAt }}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2 select-none">
+                  <button (click)="respondFriendRequest(req.requestId, 'accept')"
+                          class="px-3.5 py-1.5 bg-clay text-white text-xs font-bold rounded-lg hover:bg-clay-hover cursor-pointer transition-all">গ্রহণ করুন</button>
+                  <button (click)="respondFriendRequest(req.requestId, 'reject')"
+                          class="px-3.5 py-1.5 bg-paper border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 cursor-pointer transition-all">মুছে ফেলুন</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- TAB: ACTIVITIES LOG -->
+          <div *ngIf="activeDashboardTab() === 'notifications'" class="flex flex-col gap-3">
+            <div *ngIf="notificationsList().length === 0" class="py-16 text-center bg-paper rounded-2xl border border-ink/5 text-ink/50 select-none">
+              <mat-icon class="text-4xl text-ink/20">history</mat-icon>
+              <h4 class="text-xs font-bold mt-1">কোনো রেকর্ড পাওয়া যায়নি।</h4>
+            </div>
+
+            <div class="bg-paper border border-ink/5 rounded-2xl divide-y divide-ink/5">
+              <div *ngFor="let n of notificationsList()" 
+                   (click)="onNotificationClick(n)"
+                   class="p-4 hover:bg-clay-light flex gap-4 text-left cursor-pointer transition-all">
+                <img [src]="n.senderAvatar" class="w-9 h-9 rounded-full object-cover border border-ink/5 flex-shrink-0 animate-fade-in" alt="Avatar" referrerpolicy="no-referrer" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs md:text-sm text-ink/85 leading-normal mb-1">{{ n.details }}</p>
+                  <span class="text-[10px] font-medium text-ink/40 flex items-center gap-1">
+                    <mat-icon class="text-xs" style="font-size:12px; width:12px; height:12px;">schedule</mat-icon> {{ n.timestampFormatted }}
+                  </span>
+                </div>
+                <mat-icon class="text-clay/60 text-lg self-center">chevron_right</mat-icon>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+
+        <!-- ========================================== -->
+        <!-- VIEW: FRIENDS DIRECTORY & SEARCH           -->
+        <!-- ========================================== -->
+        <div *ngIf="activeView() === 'friends'" class="flex flex-col gap-5">
+          
+          <div class="border-b border-ink/5 pb-2 text-left">
+            <h2 class="text-2xl font-bold text-ink">আমার বন্ধুমহল</h2>
+            <p class="text-xs text-ink/50 mt-0.5">আপনার সকল বন্ধুকে খুঁজুন এবং নতুন বন্ধু যুক্ত করুন</p>
+          </div>
+
+          <!-- Dynamic search box overlay container -->
+          <div class="relative bg-paper border border-ink/5 rounded-2xl p-4 flex flex-col gap-3">
+            <h3 class="text-xs font-bold text-ink/65 text-left">নতুন বন্ধুদের খুঁজুন</h3>
+            <div class="flex items-center gap-3">
+              <input type="text" 
+                     [value]="searchQuery()"
+                     (input)="searchQuery.set($any($event.target).value)"
+                     (keyup.enter)="onSearchUsers()"
+                     placeholder="ইউজারনেম অথবা নাম লিখে এন্টার চাপুন..." 
+                     class="flex-1 px-4 py-3 bg-paper-dark border border-ink/10 rounded-xl text-xs font-sans focus:outline-none focus:border-clay" />
+              <button (click)="onSearchUsers()"
+                      class="px-5 py-3 bg-clay hover:bg-clay-hover text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1">
+                <mat-icon class="text-sm">search</mat-icon> অনুসন্ধান
+              </button>
+            </div>
+
+            <!-- Inline results display -->
+            <div *ngIf="searchResults().length > 0 && searchQuery()" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2 border-t border-ink/5 pt-4">
+              <div *ngFor="let result of searchResults()" 
+                   class="bg-paper-dark border border-ink/5 p-3 rounded-xl flex items-center justify-between gap-3 text-left">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <img [src]="result.avatar" class="w-9 h-9 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+                  <div class="min-w-0 leading-none">
+                    <span (click)="onOpenProfile(result.username)" class="text-xs font-bold text-ink hover:text-clay hover:underline cursor-pointer flex items-center gap-1 truncate">
+                      {{ result.displayName }}
+                      <span *ngIf="result.username === 'chirkut_official'" class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[8px] font-bold select-none shadow-sm leading-none flex-shrink-0">
+                        <mat-icon class="text-[9px] w-auto h-auto leading-none" style="font-size: 9px;">verified</mat-icon> অ্যাডমিন
+                      </span>
+                    </span>
+                    <span class="text-[9px] font-mono text-ink/40 mt-0.5 block">@{{ result.username }}</span>
+                  </div>
+                </div>
+                <button (click)="onOpenProfile(result.username)"
+                        class="px-3 py-1 bg-white hover:bg-clay-light border border-clay/30 text-clay text-[10px] font-bold rounded-lg cursor-pointer transition-all">প্রোফাইল</button>
+              </div>
+            </div>
+            
+            <div *ngIf="searchResults().length === 0 && searchQuery()" class="text-xs text-center text-ink/40 select-none py-2">
+              ফলাফল প্রদর্শন করতে অনুসন্ধান করুন...
+            </div>
+          </div>
+
+          <!-- FRIENDS DIRECTORY LIST -->
+          <div class="flex flex-col gap-4">
+            <h3 class="text-sm font-bold text-ink/75 flex items-center gap-1 px-1 text-left">
+              <mat-icon class="text-clay text-lg">contacts</mat-icon> সর্বমোট বন্ধু ({{ toBanglaDigits(friendsList().length) }})
+            </h3>
+
+            <div *ngIf="friendsList().length === 0" class="py-16 text-center bg-paper rounded-2xl border border-ink/5 text-ink/50 select-none">
+              <mat-icon class="text-4xl text-ink/20">supervisor_account</mat-icon>
+              <h4 class="text-xs font-bold mt-1">কোনো বন্ধু তালিকায় নেই।</h4>
+              <p class="text-[11px] mt-0.5">নতুন বন্ধুদের খুঁজে ফ্রেন্ড রিকোয়েস্ট পাঠান।</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div *ngFor="let f of friendsList()" class="bg-paper border border-ink/5 p-4 rounded-2xl shadow-sm text-center flex flex-col items-center justify-between gap-3">
+                <div class="flex flex-col items-center">
+                  <img [src]="f.avatar" class="w-14 h-14 rounded-full object-cover border border-clay/10 shadow-inner mb-2" alt="Avatar" referrerpolicy="no-referrer" />
+                  <h4 (click)="onOpenProfile(f.username)" class="text-xs font-bold text-ink hover:text-clay hover:underline cursor-pointer leading-tight">{{ f.displayName }}</h4>
+                  <span class="text-[9px] font-mono text-ink/40 mt-0.5">@{{ f.username }}</span>
+                  <p class="text-[10px] text-ink/60 line-clamp-2 italic mt-2">"{{ f.bio || 'আমার কোনো বায়ো নেই।' }}"</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2 w-full mt-2 select-none">
+                  <button (click)="onOpenProfile(f.username)"
+                          class="py-1.5 bg-paper hover:bg-clay-light border border-clay/30 text-clay text-[10px] font-bold rounded-lg cursor-pointer transition-all">প্রোফাইল</button>
+                  <button (click)="onOpenProfile(f.username)"
+                          class="py-1.5 bg-clay hover:bg-clay-hover text-white text-[10px] font-bold rounded-lg cursor-pointer transition-all">চিরকুট পাঠান</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+
+        <!-- ========================================== -->
+        <!-- VIEW: PUBLIC PROFILE PAGE OVERLAY VIEW     -->
+        <!-- ========================================== -->
+        <div *ngIf="activeView() === 'profile' && selectedUsername()" class="flex flex-col gap-6 animate-fade-in">
+          
+          <!-- Back button -->
+          <div class="flex items-center gap-2 select-none">
+            <button (click)="closeProfileOverlay()" 
+                    class="px-3.5 py-1.5 bg-paper border border-ink/10 hover:bg-clay-light text-ink/70 text-xs font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1">
+              <mat-icon class="text-sm">arrow_back</mat-icon> ফিরে যান
+            </button>
+          </div>
+
+          <!-- Loading indicator -->
+          <div *ngIf="selectedProfileLoading()" class="py-24 text-center flex flex-col items-center justify-center gap-3">
+            <div class="w-8 h-8 border-3 border-clay/20 border-t-clay rounded-full animate-spin"></div>
+            <span class="text-xs text-ink/50">ব্যবহারকারীর প্রোফাইল লোড হচ্ছে...</span>
+          </div>
+
+          <!-- Loaded profile data -->
+          <div *ngIf="!selectedProfileLoading() && selectedProfileData()" class="flex flex-col gap-6">
+            
+            <!-- Top Card banner metadata -->
+            <div class="bg-paper border border-ink/5 rounded-2xl shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+              <div class="flex flex-col md:flex-row items-center gap-5">
+                <img [src]="selectedProfileData()?.profile?.avatar" 
+                     class="w-20 h-20 rounded-full object-cover border-2 border-clay shadow-md" alt="Avatar" referrerpolicy="no-referrer" />
+                
+                <div class="flex flex-col">
+                  <h2 class="text-2xl font-bold text-ink leading-tight flex items-center justify-center md:justify-start gap-1.5">
+                    {{ selectedProfileData()?.profile?.displayName }}
+                    <span *ngIf="selectedProfileData()?.profile?.username === 'chirkut_official'" class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-100 border border-amber-300 text-amber-800 text-[10px] font-bold select-none shadow-sm leading-none flex-shrink-0">
+                      <mat-icon class="text-[11px] w-auto h-auto leading-none" style="font-size: 11px;">verified</mat-icon> অ্যাডমিন
+                    </span>
+                  </h2>
+                  <span class="text-xs font-mono text-ink/50 mt-1">@{{ selectedProfileData()?.profile?.username }}</span>
+                  <p class="text-xs text-ink/70 mt-3 max-w-sm">"{{ selectedProfileData()?.profile?.bio || 'আমার কোনো বায়ো নেই।' }}"</p>
+                  <span class="text-[10px] text-ink/40 font-medium flex items-center justify-center md:justify-start gap-1 mt-2.5">
+                    <mat-icon class="text-sm">calendar_today</mat-icon> যোগদানের তারিখ: {{ selectedProfileData()?.profile?.joinedDate }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Friendship Status Actions -->
+              <div class="flex flex-col items-center md:items-end gap-3 select-none">
+                
+                <!-- If it is NOT my own profile -->
+                <div *ngIf="selectedUsername() !== currentUser()!.username">
+                  <!-- Case 1: None -->
+                  <button *ngIf="selectedProfileData()?.friendship?.status === 'none'"
+                          (click)="sendFriendRequest(selectedUsername()!)"
+                          class="px-5 py-2.5 bg-clay hover:bg-clay-hover text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer transition-all flex items-center gap-1.5">
+                    <mat-icon class="text-sm">person_add</mat-icon> ফ্রেন্ড রিকোয়েস্ট পাঠান
+                  </button>
+
+                  <!-- Case 2: Pending Sent -->
+                  <div *ngIf="selectedProfileData()?.friendship?.status === 'pending_sent'"
+                       class="px-4 py-2.5 bg-clay-light border border-clay/10 text-clay text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-not-allowed">
+                    <mat-icon class="text-sm animate-pulse">hourglass_top</mat-icon> ফ্রেন্ড রিকোয়েস্ট পেন্ডিং
+                  </div>
+
+                  <!-- Case 3: Pending Received -->
+                  <div *ngIf="selectedProfileData()?.friendship?.status === 'pending_received'" class="flex items-center gap-2">
+                    <button (click)="respondFriendRequest(selectedProfileData()!.friendship!.requestId, 'accept')"
+                            class="px-4 py-2 bg-clay text-white text-xs font-bold rounded-lg hover:bg-clay-hover cursor-pointer transition-all">গ্রহণ করুন</button>
+                    <button (click)="respondFriendRequest(selectedProfileData()!.friendship!.requestId, 'reject')"
+                            class="px-4 py-2 bg-paper border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 cursor-pointer transition-all">মুছে ফেলুন</button>
+                  </div>
+
+                  <!-- Case 4: Friends -->
+                  <div *ngIf="selectedProfileData()?.friendship?.status === 'friends'"
+                       class="px-4 py-2.5 bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-default select-none">
+                    <mat-icon class="text-sm">check_circle</mat-icon> আপনারা বন্ধু
+                  </div>
+                </div>
+
+                <!-- If own profile banner label -->
+                <div *ngIf="selectedUsername() === currentUser()!.username" class="flex flex-col sm:flex-row items-center gap-2">
+                  <div class="px-4 py-2 bg-paper-dark border border-ink/5 text-ink/65 text-xs font-bold rounded-xl cursor-default select-none">
+                    আমার নিজের প্রোফাইল
+                  </div>
+                  <button (click)="onLogout()" 
+                          class="px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1 shadow-sm">
+                    <mat-icon class="text-sm">logout</mat-icon> লগআউট
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Profile stats card row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="profile-stats-grid">
+              <div class="bg-paper border border-ink/5 p-4 rounded-xl text-center shadow-sm">
+                <span class="text-[9px] uppercase font-bold text-ink/40 tracking-wider block mb-0.5">বন্ধু সংখ্যা</span>
+                <div class="text-xl font-bold text-clay font-sans">{{ selectedProfileData()?.stats?.totalFriends }}</div>
+              </div>
+              <div class="bg-paper border border-ink/5 p-4 rounded-xl text-center shadow-sm">
+                <span class="text-[9px] uppercase font-bold text-ink/40 tracking-wider block mb-0.5">মোট টুইট</span>
+                <div class="text-xl font-bold text-clay font-sans">{{ selectedProfileData()?.stats?.totalTweets }}</div>
+              </div>
+              <div class="bg-paper border border-ink/5 p-4 rounded-xl text-center shadow-sm">
+                <span class="text-[9px] uppercase font-bold text-ink/40 tracking-wider block mb-0.5">পাঠানো চিরকুট</span>
+                <div class="text-xl font-bold text-clay font-sans">{{ selectedProfileData()?.stats?.totalChirkutsSent }}</div>
+              </div>
+              <div class="bg-paper border border-ink/5 p-4 rounded-xl text-center shadow-sm">
+                <span class="text-[9px] uppercase font-bold text-ink/40 tracking-wider block mb-0.5">প্রাপ্ত চিরকুট</span>
+                <div class="text-xl font-bold text-clay font-sans">{{ selectedProfileData()?.stats?.totalChirkutsReceived }}</div>
+              </div>
+            </div>
+
+            <!-- CHIRKUT WRITING PANEL CONTAINER (Only if friends) -->
+            <div *ngIf="selectedProfileData()?.friendship?.status === 'friends'" 
+                 class="bg-paper border border-ink/15 shadow-sm rounded-2xl p-5 flex flex-col gap-3 relative" id="profile-chirkut-send-box">
+              <div class="border-b border-ink/5 pb-2 text-left">
+                <h3 class="text-sm font-bold text-ink flex items-center gap-1">
+                  <mat-icon class="text-clay text-lg">edit_note</mat-icon>
+                  {{ selectedProfileData()?.profile?.displayName }}-কে একটি চিরকুট লিখুন
+                </h3>
+                <p class="text-[10px] text-ink/50 mt-0.5">এটি একটি অত্যন্ত গোপন ও ব্যক্তিগত ডিজিটাল চিঠি যা শুধুমাত্র আপনারা দুজন দেখতে পারবেন।</p>
+              </div>
+
+              <form [formGroup]="chirkutForm" class="flex flex-col gap-3">
+                <textarea formControlName="content" 
+                          placeholder="আপনার সুচিন্তিত ডিজিটাল বার্তাটি এখানে লিখুন..." 
+                          rows="4" 
+                          class="w-full bg-paper-dark border border-ink/10 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-clay focus:ring-1 focus:ring-clay/10 transition-all resize-none"></textarea>
+                
+                <div class="flex items-center justify-between border-t border-ink/5 pt-3">
+                  <span class="text-[10px] text-ink/40">সর্বোচ্চ ৫০০ অক্ষর সমর্থিত</span>
+                  <button (click)="onSendChirkut(selectedUsername()!)"
+                          [disabled]="chirkutForm.invalid || isSubmitting()"
+                          class="px-5 py-2.5 bg-clay hover:bg-clay-hover disabled:bg-clay/40 text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer transition-all flex items-center gap-1.5">
+                    <mat-icon class="text-sm">send</mat-icon> চিরকুট পাঠান
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- RECENT TWEETS LIST BY THE USER -->
+            <div class="flex flex-col gap-4">
+              <h3 class="text-sm font-bold text-ink/75 text-left flex items-center gap-1 px-1">
+                <mat-icon class="text-clay text-lg">border_color</mat-icon>
+                @{{ selectedUsername() }} এর প্রকাশ করা টুইটসমূহ
+              </h3>
+
+              <div *ngIf="getFilteredTweets(selectedUsername() || '').length === 0" 
+                   class="py-16 text-center bg-paper border border-ink/5 rounded-2xl text-ink/40 select-none flex flex-col items-center justify-center gap-1">
+                <mat-icon class="text-4xl text-ink/20">history_edu</mat-icon>
+                <h4 class="text-xs font-bold">কোনো টুইট পাওয়া যায়নি।</h4>
+              </div>
+
+              <!-- Filtered user tweets -->
+              <div *ngFor="let tweet of getFilteredTweets(selectedUsername() || '')" class="bg-paper border border-ink/5 rounded-2xl p-4 md:p-5 shadow-sm hover:shadow transition-all duration-300 text-left">
+                <div class="flex items-start justify-between gap-4 mb-3">
+                  <div class="flex items-center gap-3">
+                    <img [src]="tweet.avatar" class="w-9 h-9 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+                    <div class="flex flex-col leading-none">
+                      <span class="text-xs font-bold text-ink">{{ tweet.displayName }}</span>
+                      <span class="text-[9px] font-mono text-ink/40 mt-0.5">@{{ tweet.username }}</span>
+                    </div>
+                  </div>
+                  <span class="text-[9px] font-medium text-ink/40">{{ tweet.createdAtFormatted }}</span>
+                </div>
+
+                <p class="text-xs md:text-sm text-ink leading-relaxed mb-4 whitespace-pre-wrap select-text">{{ tweet.content }}</p>
+
+                <div *ngIf="tweet.originalTweetId" class="border border-ink/10 bg-paper-dark rounded-xl p-3 mb-4 text-left">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <img [src]="tweet.originalTweetAvatar" class="w-5.5 h-5.5 rounded-full object-cover border border-ink/5" alt="Original" referrerpolicy="no-referrer" />
+                    <div class="flex flex-col leading-none">
+                      <span class="text-[9px] font-bold text-ink/80">{{ tweet.originalTweetDisplayName }}</span>
+                      <span class="text-[8px] font-mono text-ink/40">@{{ tweet.originalTweetAuthor }}</span>
+                    </div>
+                  </div>
+                  <p class="text-[10px] text-ink/70 leading-relaxed italic">"{{ tweet.originalTweetContent }}"</p>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-ink/5 pt-3 text-ink/65 text-xs">
+                  <button (click)="toggleLove(tweet)" class="flex items-center gap-1.5 hover:text-red-600 transition-all cursor-pointer group">
+                    <mat-icon class="text-base transition-all group-hover:scale-115"
+                              [class.text-red-500]="tweet.loves.includes(currentUser()!.username)"
+                              [class.fill-current]="tweet.loves.includes(currentUser()!.username)">
+                      {{ tweet.loves.includes(currentUser()!.username) ? 'favorite' : 'favorite_border' }}
+                    </mat-icon>
+                    <span class="font-semibold text-[11px]">{{ tweet.lovesCountFormatted }}</span>
+                  </button>
+
+                  <button (click)="onToggleCommentBox(tweet.id)" class="flex items-center gap-1.5 hover:text-clay transition-all cursor-pointer group">
+                    <mat-icon class="text-base transition-all group-hover:scale-115">chat_bubble_outline</mat-icon>
+                    <span class="font-semibold text-[11px]">{{ tweet.commentsCountFormatted }}</span>
+                  </button>
+
+                  <button (click)="onRepost(tweet)" 
+                          class="flex items-center gap-1.5 hover:text-green-600 transition-all cursor-pointer group"
+                          [class.text-green-600]="hasReposted(tweet.id)">
+                    <mat-icon class="text-base transition-all group-hover:scale-115"
+                              [class.fill-current]="hasReposted(tweet.id)">repeat</mat-icon>
+                    <span class="font-semibold text-[11px]">{{ tweet.repostCountFormatted }}</span>
+                  </button>
+
+                  <button (click)="onShareTweet(tweet)" class="flex items-center gap-1.5 hover:text-blue-600 transition-all cursor-pointer group">
+                    <mat-icon class="text-base transition-all group-hover:scale-115">share</mat-icon>
+                  </button>
+                </div>
+
+                <!-- SLIDING COMMENTS PANEL SECTION -->
+                <div *ngIf="commentingTweetId() === tweet.id" class="mt-4 pt-4 border-t border-ink/5 flex flex-col gap-4">
+                  
+                  <!-- Comment list iteration -->
+                  <div *ngIf="tweet.comments.length > 0" class="flex flex-col gap-3">
+                    <div *ngFor="let comment of tweet.comments" class="flex gap-3 text-left">
+                      <img [src]="comment.avatar" class="w-8 h-8 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+                      <div class="flex-1 bg-paper-dark rounded-xl px-3.5 py-2.5">
+                        <div class="flex items-center justify-between gap-4 mb-1">
+                          <span class="text-[11px] font-bold text-ink flex items-center gap-1">
+                            {{ comment.displayName }}
+                            <span *ngIf="comment.username === 'chirkut_official'" class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[8px] font-bold select-none shadow-sm leading-none">
+                              <mat-icon class="text-[9px] w-auto h-auto leading-none" style="font-size: 9px;">verified</mat-icon> অ্যাডমিন
+                            </span>
+                          </span>
+                          <span class="text-[8px] text-ink/40">{{ comment.createdAtFormatted }}</span>
+                        </div>
+                        <p class="text-xs text-ink/80 leading-normal">{{ comment.content }}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Empty comments state -->
+                  <div *ngIf="tweet.comments.length === 0" class="py-4 text-center text-[11px] text-ink/40">
+                    এখনো কোনো মন্তব্য নেই। আপনার মন্তব্যটি প্রথম যুক্ত করুন!
+                  </div>
+
+                  <!-- Input Comment Form submission -->
+                  <div class="flex items-center gap-2.5">
+                    <img [src]="currentUser()!.avatar" class="w-8.5 h-8.5 rounded-full object-cover border border-ink/5" alt="Avatar" referrerpolicy="no-referrer" />
+                    <form [formGroup]="commentForm" (ngSubmit)="onSubmitComment(tweet.id)" class="flex-1 flex gap-2">
+                      <input type="text" 
+                             formControlName="content"
+                             placeholder="আপনার মন্তব্যটি লিখুন..." 
+                             class="flex-1 bg-paper-dark border border-ink/5 px-3.5 py-2 rounded-xl text-xs focus:outline-none focus:border-clay" />
+                      <button type="submit" 
+                              [disabled]="commentForm.invalid || isSubmitting()"
+                              class="px-4 py-2 bg-clay text-white rounded-xl text-xs font-bold hover:bg-clay-hover disabled:bg-clay/40 transition-all cursor-pointer">
+                        যুক্ত করুন
+                      </button>
+                    </form>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+
+        <!-- ========================================== -->
+        <!-- VIEW: PROFILE SETTINGS CONTROLLER          -->
+        <!-- ========================================== -->
+        <div *ngIf="activeView() === 'settings' && isLoggedIn()" class="flex flex-col gap-6 text-left">
+          
+          <div class="border-b border-ink/5 pb-2">
+            <h2 class="text-2xl font-bold text-ink">প্রোফাইল সেটিংস পরিবর্তন করুন</h2>
+            <p class="text-xs text-ink/50 mt-0.5">আপনার ডিসপ্লে নাম, বায়ো, ছবি এবং পাসওয়ার্ড আপডেট রাখুন</p>
+          </div>
+
+          <div class="bg-paper border border-ink/5 rounded-2xl shadow-sm p-6 flex flex-col gap-5">
+            <form [formGroup]="settingsForm" (ngSubmit)="onUpdateSettings()" class="flex flex-col gap-5">
+              
+              <!-- Avatar changer -->
+              <div class="flex flex-col sm:flex-row items-center gap-5 bg-clay-light/40 border border-clay/10 p-4 rounded-xl">
+                <div class="relative w-20 h-20 rounded-full border-2 border-clay overflow-hidden bg-paper flex items-center justify-center shadow-md">
+                  <img *ngIf="settingsAvatarBase64()" [src]="settingsAvatarBase64()" alt="New Profile" class="w-full h-full object-cover" referrerpolicy="no-referrer" />
+                  <img *ngIf="!settingsAvatarBase64()" [src]="currentUser()!.avatar" alt="Current" class="w-full h-full object-cover" referrerpolicy="no-referrer" />
+                </div>
+                
+                <div class="flex-1 flex flex-col items-center sm:items-start gap-2 text-center sm:text-left">
+                  <label class="px-4 py-2 bg-white border border-clay/30 hover:bg-clay-light rounded-xl text-xs font-bold text-clay cursor-pointer transition-all flex items-center gap-1.5 shadow-sm">
+                    <mat-icon class="text-sm">photo_camera</mat-icon> নতুন ছবি দিন
+                    <input type="file" (change)="onSettingsAvatarSelected($event)" accept="image/png, image/jpeg, image/webp" class="hidden" />
+                  </label>
+                  <p class="text-[10px] text-ink/50">ছবি পরিবর্তন না করতে চাইলে অপশনটি ফাঁকা রাখুন (JPG, PNG, WEBP)</p>
+                </div>
+              </div>
+
+              <!-- Display Name Input -->
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-ink/75">আপনার ডিসপ্লে নাম</label>
+                <input type="text" 
+                       formControlName="displayName"
+                       placeholder="ডিসপ্লে নাম লিখুন..." 
+                       class="w-full px-4 py-3 bg-paper-dark border border-ink/10 rounded-xl focus:outline-none focus:border-clay text-sm" />
+              </div>
+
+              <!-- Bio Textarea -->
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-ink/75">আপনার বায়ো</label>
+                <textarea formControlName="bio" 
+                          placeholder="আপনার নিজের সম্পর্কে সংক্ষিপ্ত উক্তি বা বায়ো লিখুন..." 
+                          rows="3" 
+                          class="w-full px-4 py-3 bg-paper-dark border border-ink/10 rounded-xl focus:outline-none focus:border-clay text-sm resize-none"></textarea>
+              </div>
+
+              <!-- Password Changer (Optional) -->
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-ink/75">নতুন পাসওয়ার্ড (ঐচ্ছিক)</label>
+                <input type="password" 
+                       formControlName="newPassword"
+                       placeholder="পাসওয়ার্ড পরিবর্তন না করতে চাইলে ফাঁকা রাখুন" 
+                       class="w-full px-4 py-3 bg-paper-dark border border-ink/10 rounded-xl focus:outline-none focus:border-clay text-sm" />
+                <span *ngIf="settingsForm.get('newPassword')?.touched && settingsForm.get('newPassword')?.invalid" class="text-xs text-red-600 font-medium">নতুন পাসওয়ার্ড অবশ্যই কমপক্ষে ৬ অক্ষরের হতে হবে।</span>
+              </div>
+
+              <!-- Form Buttons -->
+              <div class="flex items-center justify-between pt-3 border-t border-ink/5 select-none">
+                <button type="button" 
+                        (click)="onLogout()"
+                        class="px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1 shadow-sm">
+                  <mat-icon class="text-sm">logout</mat-icon> লগআউট করুন
+                </button>
+                <div class="flex items-center gap-3">
+                  <button type="button" 
+                          (click)="activeView.set('home')"
+                          class="px-5 py-2.5 bg-paper border border-ink/10 hover:bg-paper-dark text-ink/70 text-xs font-bold rounded-xl cursor-pointer transition-all">বাতিল করুন</button>
+                  <button type="submit" 
+                          [disabled]="settingsForm.invalid || isSubmitting()"
+                          class="px-5 py-2.5 bg-clay hover:bg-clay-hover disabled:bg-clay/40 text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer transition-all flex items-center gap-1">
+                    <mat-icon class="text-sm">save</mat-icon> সেভ করুন
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- DANGER ZONE: DELETE ACCOUNT -->
+          <div class="bg-red-50/50 border border-red-200/40 rounded-2xl p-6 flex flex-col gap-4">
+            <div class="border-b border-red-200/30 pb-2">
+              <h3 class="text-sm font-bold text-red-700 flex items-center gap-1"><mat-icon class="text-base">report_problem</mat-icon> অ্যাকাউন্ট নিষ্ক্রিয়করণ</h3>
+              <p class="text-[10px] text-red-600/70 mt-0.5">আপনার অ্যাকাউন্ট মুছে ফেলা একটি অপরিবর্তনীয় সিদ্ধান্ত।</p>
+            </div>
+            
+            <p class="text-xs text-red-700/80 leading-relaxed">
+              আপনি যদি আপনার "চিরকুট" অ্যাকাউন্টটি চিরতরে মুছে ফেলেন, তবে আপনার প্রোফাইল পিকচার, বায়ো, পূর্বের সকল প্রেরিত ও প্রাপ্ত চিরকুট চিঠিসমূহ এবং প্রকাশ করা সকল টুইট ডাটাবেস থেকে স্থায়ীভাবে অপসারিত হবে।
+            </p>
+
+            <div>
+              <button (click)="onDeleteAccount()"
+                      [disabled]="isSubmitting()"
+                      class="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-600/40 text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer transition-all flex items-center gap-1.5">
+                <mat-icon class="text-sm">delete_forever</mat-icon> আমার চিরকুট অ্যাকাউন্ট ডিলিট করুন
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+
+    <!-- STICKY BOTTOM NAVIGATION BAR (Mobile Responsive Toggle Tabs) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-paper/95 backdrop-blur-md border-t border-ink/5 shadow-2xl flex items-center justify-around py-2 select-none" id="bottom-navigation-bar">
+      
+      <button (click)="activeView.set('home')" 
+              class="flex flex-col items-center gap-0.5 text-xs font-bold cursor-pointer transition-all py-1 px-3"
+              [class.text-clay]="activeView() === 'home'"
+              [class.text-ink/50]="activeView() === 'home'">
+        <mat-icon class="text-xl">home</mat-icon>
+        <span class="text-[9px]">হোম</span>
+      </button>
+
+      <button (click)="activeView.set('dashboard')" 
+              class="flex flex-col items-center gap-0.5 text-xs font-bold cursor-pointer transition-all py-1 px-3 relative"
+              [class.text-clay]="activeView() === 'dashboard'"
+              [class.text-ink/50]="activeView() === 'dashboard'">
+        <mat-icon class="text-xl">dashboard</mat-icon>
+        <span class="text-[9px]">ড্যাশবোর্ড</span>
+        <span *ngIf="api.unreadChirkutsCount() > 0" 
+              class="absolute top-1 right-3.5 bg-clay text-white font-mono text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
+          {{ api.unreadChirkutsCount() }}
+        </span>
+      </button>
+
+      <button (click)="activeView.set('friends')" 
+              class="flex flex-col items-center gap-0.5 text-xs font-bold cursor-pointer transition-all py-1 px-3 relative"
+              [class.text-clay]="activeView() === 'friends'"
+              [class.text-ink/50]="activeView() === 'friends'">
+        <mat-icon class="text-xl">group</mat-icon>
+        <span class="text-[9px]">বন্ধুবান্ধব</span>
+        <span *ngIf="pendingRequests().length > 0" 
+              class="absolute top-1 right-3 bg-amber-600 text-white font-mono text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
+          {{ pendingRequests().length }}
+        </span>
+      </button>
+
+      <button (click)="openSettingsView()" 
+              class="flex flex-col items-center gap-0.5 text-xs font-bold cursor-pointer transition-all py-1 px-3"
+              [class.text-clay]="activeView() === 'settings'"
+              [class.text-ink/50]="activeView() === 'settings'">
+        <mat-icon class="text-xl">settings</mat-icon>
+        <span class="text-[9px]">সেটিংস</span>
+      </button>
+
+    </nav>
+
+  </div>
+
+</div>
