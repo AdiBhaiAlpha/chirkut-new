@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         
         webView = WebView(this)
+        webView.setBackgroundColor(android.graphics.Color.parseColor("#1F2226"))
         setContentView(webView)
 
         val settings: WebSettings = webView.settings
