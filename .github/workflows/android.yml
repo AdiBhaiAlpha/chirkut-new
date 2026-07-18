@@ -1,4 +1,4 @@
-name: Android CI
+adle: Android CI
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
         with:
           distribution: zulu
           java-version: "21"
-          cache: gradle
+          
 
       - name: Validate and Repair Gradle Wrapper
         shell: bash
