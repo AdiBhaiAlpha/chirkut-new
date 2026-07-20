@@ -15,6 +15,24 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Dynamically provide launcher icon metadata
+        resValue("string", "custom_launcher_logo_url", "https://i.ibb.co.com/yc7GkSWY/file-000000004f7c8209888d5603f5e89d18-removebg-preview.png")
+    }
+
+    sourceSets {
+        getByName("main") {
+            java.srcDirs("src/main/java")
+            res.srcDirs("src/main/res")
+            assets.srcDirs("src/main/assets")
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            merges += "**/LICENSE.txt"
+        }
     }
 
     buildTypes {
