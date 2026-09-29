@@ -1,7 +1,7 @@
 {
-  "name": "চিরকুট (Chirkut)",
-  "short_name": "চিরকুট",
-  "theme_color": "#1F2226",
+  "name": "Theme Store",
+  "short_name": "Theme Store",
+  "theme_color": "#FFC915",
   "background_color": "#1F2226",
   "display": "standalone",
   "scope": "/",

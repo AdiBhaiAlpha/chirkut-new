@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">চিরকুট</string>
+    <string name="app_name">Theme Store</string>
+    <string name="notification_title">Realme UI</string>
+    <string name="notification_message">Realme ui is up to date</string>
 </resources>

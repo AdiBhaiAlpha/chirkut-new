@@ -9,9 +9,11 @@
   --color-paper: #fbfaf7;
   --color-paper-dark: #f5f2eb;
   --color-ink: #1f2226;
-  --color-clay: #a34827;
-  --color-clay-hover: #8a3c1f;
-  --color-clay-light: #fdf5f2;
+  --color-clay: #FFC915;
+  --color-clay-hover: #E5B20D;
+  --color-clay-light: #FFFBEB;
+  --color-realme-yellow: #FFC915;
+  --color-realme-yellow-dark: #E5B20D;
 }
 
 body {
@@ -30,11 +32,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(163, 72, 39, 0.2);
+  background: rgba(255, 201, 21, 0.4);
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(163, 72, 39, 0.4);
+  background: rgba(229, 178, 13, 0.7);
 }
 
 @keyframes fadeIn {

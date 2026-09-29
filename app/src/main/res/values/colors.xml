@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#1F2226</color>
+    <color name="ic_launcher_background">#FFC915</color>
     <color name="splash_background">#1F2226</color>
-    <color name="colorPrimary">#1F2226</color>
-    <color name="colorPrimaryDark">#1F2226</color>
+    <color name="colorPrimary">#FFC915</color>
+    <color name="colorPrimaryDark">#E5B20D</color>
+    <color name="colorAccent">#FFC915</color>
+    <color name="realme_yellow">#FFC915</color>
 </resources>

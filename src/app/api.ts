@@ -76,7 +76,7 @@ export interface Friend {
 export interface Notification {
   id: string;
   username: string;
-  type: 'friend_request' | 'friend_accepted' | 'new_chirkut' | 'tweet_love' | 'tweet_comment' | 'tweet_repost';
+  type: 'friend_request' | 'friend_accepted' | 'new_chirkut' | 'tweet_love' | 'tweet_comment' | 'tweet_repost' | 'system';
   sender: string;
   senderDisplayName: string;
   senderAvatar: string;
@@ -322,6 +322,18 @@ const defaultChirkuts: Chirkut[] = [
 ];
 
 const defaultNotifications: Notification[] = [
+  {
+    id: 'notif_realme_ui',
+    username: 'shakib',
+    type: 'system',
+    sender: 'realme_ui',
+    senderDisplayName: 'realme UI',
+    senderAvatar: 'icons/icon-96x96.png',
+    timestamp: '2026-07-20T10:00:00Z',
+    timestampFormatted: 'এখনই',
+    details: 'realme ui is up to date',
+    isRead: false
+  },
   {
     id: 'notif_1',
     username: 'shakib',
