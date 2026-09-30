@@ -178,9 +178,9 @@ class MainActivity : AppCompatActivity() {
 
         val notification = NotificationCompat.Builder(this, notificationChannelId)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("realme UI")
-            .setContentText("realme ui is up to date")
-            .setSubText("Theme Store")
+            .setContentTitle(getString(R.string.notification_title))
+            .setContentText(getString(R.string.notification_message))
+            .setSubText(getString(R.string.app_name))
             .setColor(Color.parseColor("#FFC915"))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
